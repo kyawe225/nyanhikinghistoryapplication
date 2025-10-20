@@ -1,4 +1,4 @@
-import 'package:hiking_app_one/database/databaseConfig.dart';
+import 'package:hiking_app_one/database/database_config.dart';
 
 import 'database.dart';
 import 'dart:io';
