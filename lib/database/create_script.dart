@@ -26,12 +26,13 @@ void createTables(){
     );""";
   String createObservationTable="""
   CREATE TABLE IF NOT EXISTS observations(
-    id varchar(36) PRIMARY KEY,
-    hiking_history_id varchar(36),
-    observation_date datetime,
+    id varchar(36) PRIMARY KEY NOT NULL,
+    hiking_history_id varchar(36) NOT NULL,
+    observation_date datetime NOT NULL,
     additional_comments TEXT,
-    observation TEXT,
-    observation_type varchar(100), -- file or text this would effect to observation column
+    observation_text TEXT,        -- text content (when observation_type = 'Text')
+    observation_path TEXT,        -- file path or URL or base64 (when observation_type = 'Image')
+    observation_type varchar(100) NOT NULL, -- 'Text' or 'Image'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hiking_history_id) REFERENCES hiking_history(id)
     );""";
@@ -40,4 +41,28 @@ void createTables(){
     dbHelper.execute(createObservationTable);
 
     dbHelper.close();
+}
+
+// New migration helper: adds columns if they're missing (safe - errors ignored)
+void migrateObservationColumns() {
+  try {
+    // Try adding observation_text
+    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_text TEXT;");
+  } catch (_) {
+    // ignore - column probably exists
+  }
+  try {
+    // Try adding observation_path
+    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_path TEXT;");
+  } catch (_) {
+    // ignore - column probably exists
+  }
+  try {
+    // Ensure observation_type exists (if older schema used 'observation' only)
+    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_type varchar(100) NOT NULL DEFAULT 'Text';");
+  } catch (_) {
+    // ignore
+  }
+  // Do not close the dbHelper here if other callers will use it; close to be safe
+  try { dbHelper.close(); } catch (_){}
 }

@@ -1,3 +1,45 @@
+// Top-level helpers used by the entity classes
+dynamic _pick(Map<String, dynamic> json, List<String> keys) {
+  for (final k in keys) {
+    if (json.containsKey(k) && json[k] != null) return json[k];
+  }
+  return null;
+}
+
+bool _toBool(dynamic v) {
+  if (v == null) return false;
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  final s = v.toString().toLowerCase();
+  return s == 'true' || s == '1' || s == 'yes' || s == 'y';
+}
+
+double _toDouble(dynamic v) {
+  if (v == null) return 0.0;
+  if (v is double) return v;
+  if (v is int) return v.toDouble();
+  final parsed = double.tryParse(v.toString());
+  return parsed ?? 0.0;
+}
+
+DateTime _toDateTime(dynamic v) {
+  if (v == null) return DateTime.now().toUtc();
+  if (v is DateTime) return v.toUtc();
+  if (v is int) return DateTime.fromMillisecondsSinceEpoch(v).toUtc();
+  final s = v.toString();
+  try {
+    return DateTime.parse(s).toUtc();
+  } catch (_) {
+    final millis = int.tryParse(s);
+    if (millis != null) return DateTime.fromMillisecondsSinceEpoch(millis).toUtc();
+  }
+  return DateTime.now().toUtc();
+}
+
+String _toStringSafe(dynamic v) {
+  if (v == null) return '';
+  return v.toString();
+}
 
 class Hikehistory {
   String id;
@@ -10,7 +52,7 @@ class Hikehistory {
   String description;
   bool freeParking;
   bool isFavourite;
-  DateTime createdAt= DateTime.now().toUtc();
+  DateTime createdAt = DateTime.now().toUtc();
 
   Hikehistory({
     required this.id,
@@ -26,25 +68,25 @@ class Hikehistory {
   });
 
   Hikehistory.fromJson(Map<String, dynamic> json)
-      : id = json['id'] as String,
-        name = json['name'] as String,
-        location = json['location'] as String,
-        hikedDate = DateTime.parse(json['hikedDate'] as String),
-        parkingAvailable = json['parkingAvailable'] as bool,
-        lengthOfHike = json['lengthOfHike'] as double,
-        difficultyLevel = json['difficultyLevel'] as String,
-        description = json['description'] as String,
-        freeParking = json['freeParking'] as bool,
-        isFavourite = json['isFavourite'] as bool,
-        createdAt = DateTime.parse(json['createdAt'] as String);
+      : id = _toStringSafe(_pick(json, ['id'])),
+        name = _toStringSafe(_pick(json, ['name'])),
+        location = _toStringSafe(_pick(json, ['location'])),
+        hikedDate = _toDateTime(_pick(json, ['hikedDate', 'hiked_date'])),
+        parkingAvailable = _toBool(_pick(json, ['parkingAvailable', 'parking_available'])),
+        lengthOfHike = _toDouble(_pick(json, ['lengthOfHike', 'length_of_hike'])),
+        difficultyLevel = _toStringSafe(_pick(json, ['difficultyLevel', 'difficulty_level'])),
+        description = _toStringSafe(_pick(json, ['description'])),
+        freeParking = _toBool(_pick(json, ['freeParking', 'free_parking'])),
+        isFavourite = _toBool(_pick(json, ['isFavourite', 'is_favourite'])),
+        createdAt = _toDateTime(_pick(json, ['createdAt', 'created_at']));
 }
 
-class Observation{
+class Observation {
   String id;
   String hikingHistoryId;
   DateTime observationDate;
   String additionalComments;
-  String observation;
+  String observation; // contains text or path depending on observationType
   String observationType;
   DateTime createdAt = DateTime.now().toUtc();
 
@@ -54,15 +96,23 @@ class Observation{
     required this.observationDate,
     required this.additionalComments,
     required this.observation,
-    required this.observationType
+    required this.observationType,
   });
 
   Observation.fromJson(Map<String, dynamic> json)
-      : id = json['id'] as String,
-        hikingHistoryId = json['hikingHistoryId'] as String,
-        observationDate = DateTime.parse(json['observationDate'] as String),
-        additionalComments = json['additionalComments'] as String,
-        observation = json['observation'] as String,
-        observationType = json['observationType'] as String,
-        createdAt = DateTime.parse(json['createdAt'] as String);
+      : id = _toStringSafe(_pick(json, ['id'])),
+        hikingHistoryId = _toStringSafe(_pick(json, ['hikingHistoryId', 'hiking_history_id'])),
+        observationDate = _toDateTime(_pick(json, ['observationDate', 'observation_date'])),
+        additionalComments = _toStringSafe(_pick(json, ['additionalComments', 'additional_comments'])),
+
+        // prefer path if present, otherwise use text field (keeps backwards compatibility)
+        observation = (() {
+          final path = _toStringSafe(_pick(json, ['observationPath', 'observation_path']));
+          if (path.isNotEmpty) return path;
+          final text = _toStringSafe(_pick(json, ['observationText', 'observation_text', 'observation']));
+          return text;
+        })(),
+
+        observationType = _toStringSafe(_pick(json, ['observationType', 'observation_type'])),
+        createdAt = _toDateTime(_pick(json, ['createdAt', 'created_at']));
 }
