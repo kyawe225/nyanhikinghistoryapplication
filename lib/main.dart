@@ -7,9 +7,6 @@ import 'package:hiking_app_one/providers/theme_provider.dart';
 void main() {
   if (!isDatabaseExists()) {
     createTables();
-  } else {
-    // Existing DB: attempt to migrate (adds columns if missing)
-    migrateObservationColumns();
   }
   runApp(const ProviderScope(child: MainApp()));
 }
