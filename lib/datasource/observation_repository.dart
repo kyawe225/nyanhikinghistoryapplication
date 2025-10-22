@@ -25,7 +25,7 @@ class ObservationRepository {
   List<Observation> getObservationsForHikePaged(String hikingHistoryId, int? limit, int? offset) {
     if (hikingHistoryId.isEmpty) return [];
     final where = "WHERE ${ObservationTable.hikingHistoryId} = '${_esc(hikingHistoryId)}'";
-    final order = "ORDER BY ${ObservationTable.createdAt} DESC";
+    final order = "ORDER BY ${ObservationTable.observationDate} DESC";
     final limitOffset = (limit != null) ? "LIMIT $limit${(offset != null) ? " OFFSET $offset" : ""}" : "";
     String selectQuery = """
       SELECT * FROM ${ObservationTable.tableName}

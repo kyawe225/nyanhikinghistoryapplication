@@ -1,6 +1,7 @@
 import 'package:hiking_app_one/database/database_config.dart';
 
 import 'database.dart';
+import 'database_table_column_names.dart';
 import 'dart:io';
 
 var dbHelper = DatabaseHelper();
@@ -10,31 +11,33 @@ bool isDatabaseExists(){
 }
 
 void createTables(){
-  String createHikeTables="""
-  CREATE TABLE IF NOT EXISTS hiking_history(
-    id varchar(36) PRIMARY KEY,
-    name varchar(225),
-    location varchar(225),
-    hiked_date date,
-    parking_available varchar(10) default 'No',
-    length_of_hike varchar(50),
-    difficulty_level varchar(50),
-    description TEXT,
-    free_parking tinyint default 0,
-    is_favourite tinyint default 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  // Use constants for table/column names to avoid duplication/errors
+  String createHikeTables = """
+  CREATE TABLE IF NOT EXISTS ${HikehistoryTable.tableName}(
+    ${HikehistoryTable.id} varchar(36) PRIMARY KEY,
+    ${HikehistoryTable.name} varchar(225),
+    ${HikehistoryTable.location} varchar(225),
+    ${HikehistoryTable.hikedDate} date,
+    ${HikehistoryTable.parkingAvailable} varchar(10) default 'No',
+    ${HikehistoryTable.lengthOfHike} varchar(50),
+    ${HikehistoryTable.difficultyLevel} varchar(50),
+    ${HikehistoryTable.description} TEXT,
+    ${HikehistoryTable.freeParking} tinyint default 0,
+    ${HikehistoryTable.isFavourite} tinyint default 0,
+    ${HikehistoryTable.createdAt} DATETIME DEFAULT CURRENT_TIMESTAMP
     );""";
-  String createObservationTable="""
-  CREATE TABLE IF NOT EXISTS observations(
-    id varchar(36) PRIMARY KEY NOT NULL,
-    hiking_history_id varchar(36) NOT NULL,
-    observation_date datetime NOT NULL,
-    additional_comments TEXT,
-    observation_text TEXT,        -- text content (when observation_type = 'Text')
-    observation_path TEXT,        -- file path or URL or base64 (when observation_type = 'Image')
-    observation_type varchar(100) NOT NULL, -- 'Text' or 'Image'
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (hiking_history_id) REFERENCES hiking_history(id)
+
+  String createObservationTable = """
+  CREATE TABLE IF NOT EXISTS ${ObservationTable.tableName}(
+    ${ObservationTable.id} varchar(36) PRIMARY KEY NOT NULL,
+    ${ObservationTable.hikingHistoryId} varchar(36) NOT NULL,
+    ${ObservationTable.observationDate} datetime NOT NULL,
+    ${ObservationTable.additionalComments} TEXT,
+    ${ObservationTable.observationText} TEXT,        -- text content (when observation_type = 'Text')
+    ${ObservationTable.observationPath} TEXT,        -- file path or URL or base64 (when observation_type = 'Image')
+    ${ObservationTable.observationType} varchar(100) NOT NULL, -- 'Text' or 'Image'
+    ${ObservationTable.createdAt} DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (${ObservationTable.hikingHistoryId}) REFERENCES ${HikehistoryTable.tableName}(${HikehistoryTable.id})
     );""";
 
     dbHelper.execute(createHikeTables);
@@ -47,19 +50,19 @@ void createTables(){
 void migrateObservationColumns() {
   try {
     // Try adding observation_text
-    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_text TEXT;");
+    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationText} TEXT;");
   } catch (_) {
     // ignore - column probably exists
   }
   try {
     // Try adding observation_path
-    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_path TEXT;");
+    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationPath} TEXT;");
   } catch (_) {
     // ignore - column probably exists
   }
   try {
     // Ensure observation_type exists (if older schema used 'observation' only)
-    dbHelper.execute("ALTER TABLE observations ADD COLUMN observation_type varchar(100) NOT NULL DEFAULT 'Text';");
+    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationType} varchar(100) NOT NULL DEFAULT 'Text';");
   } catch (_) {
     // ignore
   }

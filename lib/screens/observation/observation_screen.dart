@@ -148,15 +148,6 @@ class ObservationScreen extends ConsumerWidget {
           error: (err, st) => Center(child: Text('Error: $err')),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddObservationScreen(hikingHistoryId: hikingHistoryId)),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

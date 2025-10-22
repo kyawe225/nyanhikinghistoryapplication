@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:hiking_app_one/database/entities.dart';
 import 'package:hiking_app_one/providers/observation_provider.dart';
 import 'package:hiking_app_one/providers/hike_provider.dart';
@@ -141,55 +142,101 @@ class _HikeDetailScreenState extends ConsumerState<HikeDetailScreen> {
                 }
                 return Column(
                   children: observations.map((obs) {
-                    // If observation is an image, attempt to render it as an image.
-                    Widget contentWidget;
-                    if (obs.observationType.toLowerCase() == 'image' && (obs.observation.isNotEmpty ?? false)) {
+                    final bool isImage = obs.observationType.toLowerCase() == 'image';
+                    Widget? imageWidget;
+                    if (isImage && obs.observation.isNotEmpty) {
                       final data = obs.observation;
                       try {
-                        // Heuristic: long strings without slashes are likely base64
                         if (data.length > 100 && !data.contains('/') && !data.startsWith('http')) {
                           final bytes = base64Decode(data);
-                          contentWidget = Image.memory(bytes, height: 180, fit: BoxFit.cover);
+                          imageWidget = Image.memory(bytes, height: 160, fit: BoxFit.cover, width: double.infinity);
                         } else if (data.startsWith(RegExp(r'https?://'))) {
-                          contentWidget = Image.network(data, height: 180, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
+                          imageWidget = Image.network(data, height: 160, fit: BoxFit.cover, width: double.infinity, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
                         } else {
-                          // try local file path
                           final file = File(data);
                           if (file.existsSync()) {
-                            contentWidget = Image.file(file, height: 180, fit: BoxFit.cover);
+                            imageWidget = Image.file(file, height: 160, fit: BoxFit.cover, width: double.infinity);
                           } else {
-                            // fallback: try decode as base64
                             final bytes = base64Decode(data);
-                            contentWidget = Image.memory(bytes, height: 180, fit: BoxFit.cover);
+                            imageWidget = Image.memory(bytes, height: 160, fit: BoxFit.cover, width: double.infinity);
                           }
                         }
                       } catch (_) {
-                        contentWidget = const Icon(Icons.broken_image, size: 48);
+                        imageWidget = const Icon(Icons.broken_image, size: 64);
                       }
-                    } else {
-                      // text observation
-                      contentWidget = Text(obs.observation.isNotEmpty ? obs.observation : '(no text)');
                     }
 
+                    String dateStr;
+                    try {
+                      final dt = (obs.observationDate != null) ? obs.observationDate.toLocal() : obs.createdAt.toLocal();
+                      dateStr = DateFormat.yMd().add_jm().format(dt);
+                    } catch (_) {
+                      try {
+                        dateStr = DateFormat.yMd().add_jm().format(obs.createdAt.toLocal());
+                      } catch (_) {
+                        dateStr = 'Unknown date';
+                      }
+                    }
+
+                    final String observationText = (!isImage && obs.observation.isNotEmpty) ? obs.observation : '';
+                    final String comments = obs.additionalComments.isNotEmpty ? obs.additionalComments : '';
+
                     return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
                       child: ListTile(
-                        leading: CircleAvatar(child: Text(obs.observationType.isNotEmpty ? obs.observationType[0] : 'O')),
-                        title: contentWidget,
-                        isThreeLine: obs.additionalComments.isNotEmpty,
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('${obs.observationType} • ${obs.observationDate.toLocal()}'.split(' ')[0]),
-                            if (obs.additionalComments.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(obs.additionalComments, style: const TextStyle(fontSize: 13)),
+                        leading: null,
+                        title: Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (imageWidget != null) ...[
+                                ClipRRect(borderRadius: BorderRadius.circular(8), child: imageWidget),
+                                const SizedBox(height: 8),
+                              ],
+                              Text(dateStr, style: TextStyle(color: Colors.grey.shade700)),
+                              if (observationText.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                const Text('Observation', style: TextStyle(fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+                                Text(observationText),
+                              ],
+                              if (comments.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                const Text('Additional comments', style: TextStyle(fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+                                Text(comments),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () => ref.read(observationsProvider(_hike.id).notifier).deleteObservation(obs.id, _hike.id),
+                        trailing: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (v) async {
+                            if (v == 'edit') {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => AddObservationScreen(hikingHistoryId: _hike.id, existing: obs)));
+                            } else if (v == 'delete') {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Observation'),
+                                  content: const Text('Delete this observation?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                await ref.read(observationsProvider(_hike.id).notifier).deleteObservation(obs.id, _hike.id);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Observation deleted')));
+                              }
+                            }
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                            PopupMenuItem(value: 'delete', child: Text('Delete')),
+                          ],
                         ),
                       ),
                     );
