@@ -22,18 +22,18 @@ double _toDouble(dynamic v) {
   return parsed ?? 0.0;
 }
 
-DateTime _toDateTime(dynamic v) {
-  if (v == null) return DateTime.now().toUtc();
-  if (v is DateTime) return v.toUtc();
-  if (v is int) return DateTime.fromMillisecondsSinceEpoch(v).toUtc();
+DateTime _toDateTime(dynamic v, {bool isUtc = true}) {
+  if (v == null) return isUtc ? DateTime.now().toUtc() : DateTime.now();
+  if (v is DateTime) return isUtc ? v.toUtc() : v;
+  if (v is int) return isUtc ? DateTime.fromMillisecondsSinceEpoch(v).toUtc() : DateTime.fromMillisecondsSinceEpoch(v);
   final s = v.toString();
   try {
-    return DateTime.parse(s).toUtc();
+    return isUtc ? DateTime.parse(s).toUtc() : DateTime.parse(s);
   } catch (_) {
     final millis = int.tryParse(s);
-    if (millis != null) return DateTime.fromMillisecondsSinceEpoch(millis).toUtc();
+    if (millis != null) return isUtc ? DateTime.fromMillisecondsSinceEpoch(millis).toUtc() : DateTime.fromMillisecondsSinceEpoch(millis);
   }
-  return DateTime.now().toUtc();
+  return isUtc ? DateTime.now().toUtc() : DateTime.now();
 }
 
 String _toStringSafe(dynamic v) {
@@ -71,7 +71,7 @@ class Hikehistory {
       : id = _toStringSafe(_pick(json, ['id'])),
         name = _toStringSafe(_pick(json, ['name'])),
         location = _toStringSafe(_pick(json, ['location'])),
-        hikedDate = _toDateTime(_pick(json, ['hikedDate', 'hiked_date'])),
+        hikedDate = _toDateTime(_pick(json, ['hikedDate', 'hiked_date']),isUtc:false),
         parkingAvailable = _toBool(_pick(json, ['parkingAvailable', 'parking_available'])),
         lengthOfHike = _toDouble(_pick(json, ['lengthOfHike', 'length_of_hike'])),
         difficultyLevel = _toStringSafe(_pick(json, ['difficultyLevel', 'difficulty_level'])),
@@ -102,7 +102,7 @@ class Observation {
   Observation.fromJson(Map<String, dynamic> json)
       : id = _toStringSafe(_pick(json, ['id'])),
         hikingHistoryId = _toStringSafe(_pick(json, ['hikingHistoryId', 'hiking_history_id'])),
-        observationDate = _toDateTime(_pick(json, ['observationDate', 'observation_date'])),
+        observationDate = _toDateTime(_pick(json, ['observationDate', 'observation_date']), isUtc: false),
         additionalComments = _toStringSafe(_pick(json, ['additionalComments', 'additional_comments'])),
 
         // prefer path if present, otherwise use text field (keeps backwards compatibility)
