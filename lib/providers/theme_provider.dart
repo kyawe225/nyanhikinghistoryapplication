@@ -40,6 +40,7 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.teal.shade600,
+        foregroundColor: Colors.white, // ensure button text is white
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       ),
@@ -47,7 +48,7 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       elevation: 6,
       backgroundColor: Colors.cyanAccent.shade400,
-      foregroundColor: Colors.black87,
+      foregroundColor: Colors.white, // make FAB icon/text visible on accent
     ),
     // Borderless text fields with extra vertical padding to visually space inputs
     inputDecorationTheme: InputDecorationTheme(
@@ -84,7 +85,7 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.green.shade600,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.white, // ensure button text is white
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
@@ -130,7 +131,7 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.cyanAccent.shade100.withOpacity(0.95),
-        foregroundColor: Colors.black87,
+        foregroundColor: Colors.white, // button text white for consistency
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

@@ -58,7 +58,19 @@ class ObservationScreen extends ConsumerWidget {
                   }
                 }
 
-                final String dateStr = DateFormat.yMd().add_jm().format(obs.observationDate.toLocal());
+                // Safely compute a human-friendly date string; fall back to createdAt or a placeholder if needed
+                String dateStr;
+                try {
+                  final dt = (obs.observationDate != null) ? obs.observationDate.toLocal() : obs.createdAt.toLocal();
+                  dateStr = DateFormat.yMd().add_jm().format(dt);
+                } catch (_) {
+                  try {
+                    dateStr = DateFormat.yMd().add_jm().format(obs.createdAt.toLocal());
+                  } catch (_) {
+                    dateStr = 'Unknown date';
+                  }
+                }
+
                 final String observationText = (!isImage && obs.observation.isNotEmpty) ? obs.observation : '';
                 final String comments = obs.additionalComments.isNotEmpty ? obs.additionalComments : '';
 
@@ -77,7 +89,12 @@ class ObservationScreen extends ConsumerWidget {
                             ClipRRect(borderRadius: BorderRadius.circular(8.0), child: imageWidget),
                             const SizedBox(height: 8),
                           ],
-                          Text(dateStr, style: TextStyle(color: Colors.grey.shade700)),
+                          // ensure date is visible across themes
+                          Text(
+                            dateStr,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700) ??
+                                TextStyle(color: Colors.grey.shade700),
+                          ),
                           if (observationText.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             const Text('Observation', style: TextStyle(fontWeight: FontWeight.w600)),
