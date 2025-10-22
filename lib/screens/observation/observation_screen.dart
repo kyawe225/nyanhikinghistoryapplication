@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hiking_app_one/providers/observation_provider.dart';
 import 'package:hiking_app_one/screens/observation/add_observation_screen.dart';
+import 'package:intl/intl.dart';
 
 class ObservationScreen extends ConsumerWidget {
   final String hikingHistoryId;
@@ -31,52 +32,68 @@ class ObservationScreen extends ConsumerWidget {
               itemCount: observations.length,
               itemBuilder: (context, index) {
                 final obs = observations[index];
-                Widget content;
 
-                if (obs.observationType.toLowerCase() == 'image' && (obs.observation.isNotEmpty ?? false)) {
+                final bool isImage = obs.observationType.toLowerCase() == 'image';
+                Widget? imageWidget;
+                if (isImage && obs.observation.isNotEmpty) {
                   final data = obs.observation;
                   try {
-                    // If looks like base64 (no path separators and long), decode and show
                     if (data.length > 100 && !data.contains('/') && !data.startsWith('http')) {
                       final bytes = base64Decode(data);
-                      content = Image.memory(bytes, height: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
-                    } else if (kIsWeb && data.startsWith('http')) {
-                      content = Image.network(data, height: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
+                      imageWidget = Image.memory(bytes, height: 160, fit: BoxFit.cover, width: double.infinity);
+                    } else if (data.startsWith(RegExp(r'https?://'))) {
+                      imageWidget = Image.network(data, height: 160, fit: BoxFit.cover, width: double.infinity, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
                     } else {
                       final file = File(data);
                       if (file.existsSync()) {
-                        content = Image.file(file, height: 80, fit: BoxFit.cover);
-                      } else if (data.startsWith(RegExp(r'https?://'))) {
-                        content = Image.network(data, height: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
+                        imageWidget = Image.file(file, height: 160, fit: BoxFit.cover, width: double.infinity);
                       } else {
-                        // fallback: maybe it's base64 but short; try decode
+                        // fallback: try decode as base64
                         final bytes = base64Decode(data);
-                        content = Image.memory(bytes, height: 80, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image));
+                        imageWidget = Image.memory(bytes, height: 160, fit: BoxFit.cover, width: double.infinity);
                       }
                     }
                   } catch (_) {
-                    content = const Icon(Icons.broken_image);
+                    imageWidget = const Icon(Icons.broken_image, size: 64);
                   }
-                } else {
-                  content = Text(obs.observation.isNotEmpty ? obs.observation : '(no text)', maxLines: 3, overflow: TextOverflow.ellipsis);
                 }
 
+                final String dateStr = DateFormat.yMd().add_jm().format(obs.observationDate.toLocal());
+                final String observationText = (!isImage && obs.observation.isNotEmpty) ? obs.observation : '';
+                final String comments = obs.additionalComments.isNotEmpty ? obs.additionalComments : '';
+
                 return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
                   child: ListTile(
-                    // title shows image or text; subtitle shows date and additional comments (no type label for non-image)
-                    title: content,
-                    isThreeLine: obs.additionalComments.isNotEmpty,
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('${obs.observationDate.toLocal()}'.split(' ')[0]),
-                        if (obs.additionalComments.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(obs.additionalComments, style: const TextStyle(fontSize: 13)),
+                    // leading removed
+                    leading: null,
+                    // show image (if any) as the top block by using title Column
+                    title: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (imageWidget != null) ...[
+                            ClipRRect(borderRadius: BorderRadius.circular(8.0), child: imageWidget),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(dateStr, style: TextStyle(color: Colors.grey.shade700)),
+                          if (observationText.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text('Observation', style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Text(observationText),
+                          ],
+                          if (comments.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text('Additional comments', style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Text(comments),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
+                    // action menu stays as before
                     trailing: PopupMenuButton<String>(
                       icon: const Icon(Icons.more_vert),
                       onSelected: (v) async {

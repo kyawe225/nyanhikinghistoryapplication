@@ -20,13 +20,13 @@ final Map<ThemeType, ThemeData> themeDataMap = {
   ThemeType.material: ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.blueAccent,
+      seedColor: Colors.teal, // changed to teal (green-cyan)
       brightness: Brightness.light,
     ),
-    primaryColor: Colors.blueAccent,
+    primaryColor: Colors.teal,
     scaffoldBackgroundColor: Colors.grey.shade50,
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Colors.teal.shade700,
       elevation: 2,
       titleTextStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
       iconTheme: const IconThemeData(color: Colors.white),
@@ -39,13 +39,15 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.teal.shade600,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       ),
     ),
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
       elevation: 6,
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Colors.cyanAccent.shade400,
+      foregroundColor: Colors.black87,
     ),
     // Borderless text fields with extra vertical padding to visually space inputs
     inputDecorationTheme: InputDecorationTheme(
@@ -63,15 +65,15 @@ final Map<ThemeType, ThemeData> themeDataMap = {
   ),
 
   ThemeType.cupertino: ThemeData(
-    // Cupertino-like approximation using Material ThemeData
+    // Cupertino-like approximation using green tones
     brightness: Brightness.light,
-    primaryColor: Colors.lightBlue,
+    primaryColor: Colors.green,
     scaffoldBackgroundColor: Colors.white,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
       elevation: 0,
       titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.black87),
-      iconTheme: IconThemeData(color: Colors.black87),
+      iconTheme: IconThemeData(color: Colors.green),
     ),
     cardTheme: CardThemeData(
       color: Colors.white,
@@ -81,13 +83,13 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.lightBlue,
+        backgroundColor: Colors.green.shade600,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
     textTheme: ThemeData.light().textTheme.apply(
-      fontFamily: 'SF Pro Text', // best-effort iOS typography
+      fontFamily: 'SF Pro Text',
       bodyColor: Colors.black87,
       displayColor: Colors.black87,
     ),
@@ -97,20 +99,20 @@ final Map<ThemeType, ThemeData> themeDataMap = {
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: Colors.white,
-      selectedItemColor: Colors.lightBlue,
+      selectedItemColor: Colors.green.shade600,
       unselectedItemColor: Colors.black54,
     ),
   ),
 
   ThemeType.ios26Liquid: ThemeData(
-    // "Liquid glass" / iOS translucent approximation
+    // "Liquid glass" / cyan-green translucent approximation
     brightness: Brightness.light,
     primaryColor: Colors.cyan,
     scaffoldBackgroundColor: Colors.grey.shade100,
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.white.withOpacity(0.65), // translucent feel
+      backgroundColor: Colors.cyan.withOpacity(0.65), // translucent feel
       elevation: 0,
       titleTextStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.black87),
       iconTheme: const IconThemeData(color: Colors.black87),
@@ -127,7 +129,7 @@ final Map<ThemeType, ThemeData> themeDataMap = {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withOpacity(0.85),
+        backgroundColor: Colors.cyanAccent.shade100.withOpacity(0.95),
         foregroundColor: Colors.black87,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -145,11 +147,10 @@ final Map<ThemeType, ThemeData> themeDataMap = {
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Colors.cyanAccent.shade100.withOpacity(0.95),
+      backgroundColor: Colors.greenAccent.shade100.withOpacity(0.95),
       foregroundColor: Colors.black87,
       elevation: 0,
     ),
-    // subtle accent consistent with translucent look
     colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan, brightness: Brightness.light),
   ),
 };
