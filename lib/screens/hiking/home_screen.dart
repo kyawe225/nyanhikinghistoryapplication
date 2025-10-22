@@ -46,7 +46,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hikesAsync = ref.watch(hikesProvider);
     final currentTheme = ref.watch(themeTypeProvider);
 
-    // Map labels for menu (no if statements used when applying)
     const Map<ThemeType, String> themeLabels = {
       ThemeType.material: 'Material',
       ThemeType.cupertino: 'Cupertino',

@@ -1,4 +1,6 @@
 // Top-level helpers used by the entity classes
+import 'package:hiking_app_one/database/database_table_column_names.dart';
+
 dynamic _pick(Map<String, dynamic> json, List<String> keys) {
   for (final k in keys) {
     if (json.containsKey(k) && json[k] != null) return json[k];
@@ -71,14 +73,14 @@ class Hikehistory {
       : id = _toStringSafe(_pick(json, ['id'])),
         name = _toStringSafe(_pick(json, ['name'])),
         location = _toStringSafe(_pick(json, ['location'])),
-        hikedDate = _toDateTime(_pick(json, ['hikedDate', 'hiked_date']),isUtc:false),
-        parkingAvailable = _toBool(_pick(json, ['parkingAvailable', 'parking_available'])),
-        lengthOfHike = _toDouble(_pick(json, ['lengthOfHike', 'length_of_hike'])),
-        difficultyLevel = _toStringSafe(_pick(json, ['difficultyLevel', 'difficulty_level'])),
+        hikedDate = _toDateTime(_pick(json, ['hikedDate', HikehistoryTable.hikedDate]),isUtc:false),
+        parkingAvailable = _toBool(_pick(json, ['parkingAvailable', HikehistoryTable.parkingAvailable])),
+        lengthOfHike = _toDouble(_pick(json, ['lengthOfHike', HikehistoryTable.lengthOfHike])),
+        difficultyLevel = _toStringSafe(_pick(json, ['difficultyLevel', HikehistoryTable.difficultyLevel])),
         description = _toStringSafe(_pick(json, ['description'])),
-        freeParking = _toBool(_pick(json, ['freeParking', 'free_parking'])),
-        isFavourite = _toBool(_pick(json, ['isFavourite', 'is_favourite'])),
-        createdAt = _toDateTime(_pick(json, ['createdAt', 'created_at']));
+        freeParking = _toBool(_pick(json, ['freeParking', HikehistoryTable.freeParking])),
+        isFavourite = _toBool(_pick(json, ['isFavourite', HikehistoryTable.isFavourite])),
+        createdAt = _toDateTime(_pick(json, ['createdAt', HikehistoryTable.createdAt]));
 }
 
 class Observation {
@@ -101,18 +103,15 @@ class Observation {
 
   Observation.fromJson(Map<String, dynamic> json)
       : id = _toStringSafe(_pick(json, ['id'])),
-        hikingHistoryId = _toStringSafe(_pick(json, ['hikingHistoryId', 'hiking_history_id'])),
-        observationDate = _toDateTime(_pick(json, ['observationDate', 'observation_date']), isUtc: false),
-        additionalComments = _toStringSafe(_pick(json, ['additionalComments', 'additional_comments'])),
-
-        // prefer path if present, otherwise use text field (keeps backwards compatibility)
+        hikingHistoryId = _toStringSafe(_pick(json, ['hikingHistoryId', ObservationTable.hikingHistoryId])),
+        observationDate = _toDateTime(_pick(json, ['observationDate', ObservationTable.observationDate]), isUtc: false),
+        additionalComments = _toStringSafe(_pick(json, ['additionalComments', ObservationTable.additionalComments])),
         observation = (() {
-          final path = _toStringSafe(_pick(json, ['observationPath', 'observation_path']));
+          final path = _toStringSafe(_pick(json, ['observationPath', ObservationTable.observationPath]));
           if (path.isNotEmpty) return path;
-          final text = _toStringSafe(_pick(json, ['observationText', 'observation_text', 'observation']));
+          final text = _toStringSafe(_pick(json, ['observationText', ObservationTable.observationText, 'observation']));
           return text;
         })(),
-
-        observationType = _toStringSafe(_pick(json, ['observationType', 'observation_type'])),
-        createdAt = _toDateTime(_pick(json, ['createdAt', 'created_at']));
+        observationType = _toStringSafe(_pick(json, ['observationType', ObservationTable.observationType])),
+        createdAt = _toDateTime(_pick(json, ['createdAt', ObservationTable.createdAt]));
 }
