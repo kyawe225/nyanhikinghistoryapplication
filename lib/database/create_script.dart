@@ -1,18 +1,22 @@
 import 'package:hiking_app_one/database/database_config.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'database.dart';
 import 'database_table_column_names.dart';
 import 'dart:io';
 
-var dbHelper = DatabaseHelper();
-
-bool isDatabaseExists(){
-  return File(Configs.databaseConnectionString).existsSync();
+Future<bool> isDatabaseExists() async {
+  final documentsDirectory = await getApplicationDocumentsDirectory();
+  final path = '${documentsDirectory.path}/${Configs.databaseConnectionString}';
+  return File(path).existsSync();
 }
 
-void createTables(){
+void createTables() async {
+  final db = await DatabaseHelper.init();
+  final dbHelper = DatabaseHelper(db);
   // Use constants for table/column names to avoid duplication/errors
-  String createHikeTables = """
+  String createHikeTables =
+      """
   CREATE TABLE IF NOT EXISTS ${HikehistoryTable.tableName}(
     ${HikehistoryTable.id} varchar(36) PRIMARY KEY,
     ${HikehistoryTable.name} varchar(225),
@@ -27,7 +31,8 @@ void createTables(){
     ${HikehistoryTable.createdAt} DATETIME DEFAULT CURRENT_TIMESTAMP
     );""";
 
-  String createObservationTable = """
+  String createObservationTable =
+      """
   CREATE TABLE IF NOT EXISTS ${ObservationTable.tableName}(
     ${ObservationTable.id} varchar(36) PRIMARY KEY NOT NULL,
     ${ObservationTable.hikingHistoryId} varchar(36) NOT NULL,
@@ -40,32 +45,10 @@ void createTables(){
     FOREIGN KEY (${ObservationTable.hikingHistoryId}) REFERENCES ${HikehistoryTable.tableName}(${HikehistoryTable.id})
     );""";
 
-    dbHelper.execute(createHikeTables);
-    dbHelper.execute(createObservationTable);
+  dbHelper.execute(createHikeTables);
+  dbHelper.execute(createObservationTable);
 
-    dbHelper.close();
+  dbHelper.close();
 }
 
 // New migration helper: adds columns if they're missing (safe - errors ignored)
-void migrateObservationColumns() {
-  try {
-    // Try adding observation_text
-    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationText} TEXT;");
-  } catch (_) {
-    // ignore - column probably exists
-  }
-  try {
-    // Try adding observation_path
-    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationPath} TEXT;");
-  } catch (_) {
-    // ignore - column probably exists
-  }
-  try {
-    // Ensure observation_type exists (if older schema used 'observation' only)
-    dbHelper.execute("ALTER TABLE ${ObservationTable.tableName} ADD COLUMN ${ObservationTable.observationType} varchar(100) NOT NULL DEFAULT 'Text';");
-  } catch (_) {
-    // ignore
-  }
-  // Do not close the dbHelper here if other callers will use it; close to be safe
-  try { dbHelper.close(); } catch (_){}
-}

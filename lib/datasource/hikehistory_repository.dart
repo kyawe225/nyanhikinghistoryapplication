@@ -3,10 +3,17 @@ import 'package:hiking_app_one/database/database_table_column_names.dart';
 import 'package:hiking_app_one/database/entities.dart';
 
 class HikehistoryRepository {
-  late final DatabaseHelper database;
+  late DatabaseHelper? database;
 
   HikehistoryRepository(){
-    database = DatabaseHelper();
+    database = null;
+  }
+
+  Future getDatabaseHelper() async{
+    if(database == null){
+      final db = await DatabaseHelper.init();
+      database = DatabaseHelper(db);
+    }
   }
 
   // helper to escape single quotes for simple SQL interpolation
@@ -15,11 +22,13 @@ class HikehistoryRepository {
     return v.toString().replaceAll("'", "''");
   }
 
-  List<Hikehistory> getAll(){
-    return getAllPaged(null, null);
+  Future<List<Hikehistory>> getAll() async {
+    await getDatabaseHelper();
+    return await getAllPaged(null, null);
   }
 
-  List<Hikehistory> getAllPaged(int? limit, int? offset) {
+  Future<List<Hikehistory>> getAllPaged(int? limit, int? offset) async {
+    await getDatabaseHelper();
     final order = "ORDER BY ${HikehistoryTable.createdAt} DESC";
     final limitOffset = (limit != null) ? "LIMIT $limit${(offset != null) ? " OFFSET $offset" : ""}" : "";
     String selectQuery = """
@@ -28,7 +37,7 @@ class HikehistoryRepository {
       $limitOffset;
     """;
     try {
-      final result = database.select(selectQuery);
+      final result = database!.select(selectQuery);
       return result.map((e) => Hikehistory.fromJson(e)).toList();
     } catch (e, st) {
       print('HikehistoryRepository.getAllPaged error: $e\n$st');
@@ -36,7 +45,8 @@ class HikehistoryRepository {
     }
   }
 
-  List<Hikehistory> getFavouritesPaged(int? limit, int? offset) {
+  Future<List<Hikehistory>> getFavouritesPaged(int? limit, int? offset) async {
+    await getDatabaseHelper();
     final where = "WHERE ${HikehistoryTable.isFavourite} = 1";
     final order = "ORDER BY ${HikehistoryTable.createdAt} DESC";
     final limitOffset = (limit != null) ? "LIMIT $limit${(offset != null) ? " OFFSET $offset" : ""}" : "";
@@ -47,7 +57,7 @@ class HikehistoryRepository {
       $limitOffset;
     """;
     try {
-      final result = database.select(selectQuery);
+      final result = database!.select(selectQuery);
       return result.map((e) => Hikehistory.fromJson(e)).toList();
     } catch (e, st) {
       print('HikehistoryRepository.getFavouritesPaged error: $e\n$st');
@@ -55,14 +65,15 @@ class HikehistoryRepository {
     }
   }
 
-  Hikehistory? getDetail(String id){
+  Future<Hikehistory?> getDetail(String id) async {
+    await getDatabaseHelper();
     if (id.isEmpty) return null;
     String selectQuery = """
       SELECT * FROM ${HikehistoryTable.tableName}
       WHERE ${HikehistoryTable.id} = '${_esc(id)}';
     """;
     try {
-      final result = database.select(selectQuery);
+      final result = database!.select(selectQuery);
       if (result.isNotEmpty) {
         return Hikehistory.fromJson(result.first);
       }
@@ -73,7 +84,8 @@ class HikehistoryRepository {
     }
   }
 
-  bool create(Hikehistory hikehistory){
+  Future<bool> create(Hikehistory hikehistory) async {
+    await getDatabaseHelper();
     String insertQuery = """
       INSERT INTO ${HikehistoryTable.tableName} (
         ${HikehistoryTable.id}, ${HikehistoryTable.name}, ${HikehistoryTable.location}, ${HikehistoryTable.hikedDate},
@@ -89,7 +101,7 @@ class HikehistoryRepository {
       );
     """;
     try {
-      database.execute(insertQuery);
+      database!.execute(insertQuery);
       return true;
     } catch (e, st) {
       print('HikehistoryRepository.create error: $e\n$st');
@@ -97,7 +109,8 @@ class HikehistoryRepository {
     }
   }
 
-  bool update(String id, Hikehistory hikehistory){
+  Future<bool> update(String id, Hikehistory hikehistory) async {
+    await getDatabaseHelper();
     if (id.isEmpty) return false;
     String updateQuery = """
       UPDATE ${HikehistoryTable.tableName}
@@ -114,7 +127,7 @@ class HikehistoryRepository {
       WHERE ${HikehistoryTable.id} = '${_esc(id)}';
     """;
     try {
-      database.execute(updateQuery);
+      database!.execute(updateQuery);
       return true;
     } catch (e, st) {
       print('HikehistoryRepository.update error: $e\n$st');
@@ -122,14 +135,15 @@ class HikehistoryRepository {
     }
   }
 
-  bool delete(String id){
+  Future<bool> delete(String id) async {
+    await getDatabaseHelper();
     if (id.isEmpty) return false;
     String deleteQuery = """
       DELETE FROM ${HikehistoryTable.tableName}
       WHERE ${HikehistoryTable.id} = '${_esc(id)}';
     """;
     try {
-      database.execute(deleteQuery);
+      database!.execute(deleteQuery);
       return true;
     } catch (e, st) {
       print('HikehistoryRepository.delete error: $e\n$st');
@@ -137,13 +151,14 @@ class HikehistoryRepository {
     }
   }
   
-  bool reset(){
+  Future<bool> reset() async{
     // TRUNCATE is not supported in SQLite; use DELETE instead.
+    await getDatabaseHelper();
     String resetQuery = """
       DELETE FROM ${HikehistoryTable.tableName};
     """;
     try {
-      database.execute(resetQuery);
+      database!.execute(resetQuery);
       return true;
     } catch (e, st) {
       print('HikehistoryRepository.reset error: $e\n$st');
@@ -151,7 +166,8 @@ class HikehistoryRepository {
     }
   }
 
-  bool toggleFavourite(String id, bool fav) {
+  Future<bool> toggleFavourite(String id, bool fav) async {
+    await getDatabaseHelper();
     if (id.isEmpty) return false;
     final val = fav ? 1 : 0;
     String updateQuery = """
@@ -160,7 +176,7 @@ class HikehistoryRepository {
       WHERE ${HikehistoryTable.id} = '${_esc(id)}';
     """;
     try {
-      database.execute(updateQuery);
+      database!.execute(updateQuery);
       return true;
     } catch (e, st) {
       print('HikehistoryRepository.toggleFavourite error: $e\n$st');

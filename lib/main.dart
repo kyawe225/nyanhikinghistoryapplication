@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hiking_app_one/database/create_script.dart';
+import 'package:hiking_app_one/database/database.dart';
 import 'package:hiking_app_one/screens/hiking/home_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hiking_app_one/providers/theme_provider.dart';
 
-void main() {
-  if (!isDatabaseExists()) {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final database = await DatabaseHelper.init();
+  // if (!await isDatabaseExists()) {
     createTables();
-  }
+  // }
   runApp(const ProviderScope(child: MainApp()));
 }
 

@@ -35,12 +35,14 @@ dependencies:
   flutter_riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
   sqlite3: ^2.9.3
+  sqlite3_flutter_libs: ^0.5.40
   location: ^8.0.1
   uuid: ^4.5.1
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   image_picker: ^1.1.2
   intl: ^0.17.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

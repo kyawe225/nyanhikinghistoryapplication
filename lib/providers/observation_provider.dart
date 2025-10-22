@@ -16,9 +16,9 @@ class Observations extends _$Observations {
     return Future.value(_loadObservations(hikingHistoryId));
   }
 
-  List<Observation> _loadObservations(String hikingHistoryId) {
+  Future<List<Observation>> _loadObservations(String hikingHistoryId) async {
     final repository = ref.read(observationRepositoryProvider);
-    return repository.getObservationsForHike(hikingHistoryId);
+    return await repository.getObservationsForHike(hikingHistoryId);
   }
 
   Future<void> addObservation(Observation observation) async {

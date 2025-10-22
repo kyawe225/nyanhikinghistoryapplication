@@ -3,10 +3,17 @@ import 'package:hiking_app_one/database/database_table_column_names.dart';
 import 'package:hiking_app_one/database/entities.dart';
 
 class ObservationRepository {
-  late final DatabaseHelper database;
+  late DatabaseHelper? database;
 
   ObservationRepository(){
-    database = DatabaseHelper();
+    database = null;
+  }
+  Future getDatabaseHelper() async{
+    if(database == null){
+      final db = await DatabaseHelper.init();
+      database = DatabaseHelper(db);
+    }
+    return true;
   }
 
   // Helper to escape single quotes for simple SQL string interpolation
@@ -16,13 +23,15 @@ class ObservationRepository {
     return s.replaceAll("'", "''");
   }
 
-  List<Observation> getObservationsForHike(String hikingHistoryId) {
+  Future<List<Observation>> getObservationsForHike(String hikingHistoryId) async {
     // keep original behaviour (no paging) for callers that expect full list
+    await getDatabaseHelper();
     return getObservationsForHikePaged(hikingHistoryId, null, null);
   }
 
   // New: paginated fetch. If limit is null, no LIMIT clause applied.
-  List<Observation> getObservationsForHikePaged(String hikingHistoryId, int? limit, int? offset) {
+  Future<List<Observation>> getObservationsForHikePaged(String hikingHistoryId, int? limit, int? offset) async {
+    await getDatabaseHelper();
     if (hikingHistoryId.isEmpty) return [];
     final where = "WHERE ${ObservationTable.hikingHistoryId} = '${_esc(hikingHistoryId)}'";
     final order = "ORDER BY ${ObservationTable.observationDate} DESC";
@@ -34,7 +43,7 @@ class ObservationRepository {
       $limitOffset;
     """;
     try {
-      final result = database.select(selectQuery);
+      final result = database!.select(selectQuery);
       // result elements are mapped to Observation.fromJson as existing code expected
       return result.map((e) => Observation.fromJson(e)).toList();
     } catch (e, st) {
@@ -43,7 +52,8 @@ class ObservationRepository {
     }
   }
 
-  bool create(Observation observation) {
+  Future<bool> create(Observation observation) async {
+    await getDatabaseHelper();
     // Decide which column to populate
     final textVal = (observation.observationType.toLowerCase() == 'image') ? '' : observation.observation;
     final pathVal = (observation.observationType.toLowerCase() == 'image') ? observation.observation : '';
@@ -60,7 +70,7 @@ class ObservationRepository {
       );
     """;
     try {
-      database.execute(insertQuery);
+      database!.execute(insertQuery);
       return true;
     } catch (e, st) {
       print('ObservationRepository.create error: $e\n$st');
@@ -68,7 +78,8 @@ class ObservationRepository {
     }
   }
 
-  bool update(String id, Observation observation) {
+  Future<bool> update(String id, Observation observation) async {
+    await getDatabaseHelper();
     final textVal = (observation.observationType.toLowerCase() == 'image') ? '' : observation.observation;
     final pathVal = (observation.observationType.toLowerCase() == 'image') ? observation.observation : '';
 
@@ -84,7 +95,7 @@ class ObservationRepository {
       WHERE ${ObservationTable.id} = '${_esc(id)}';
     """;
     try {
-      database.execute(updateQuery);
+      database!.execute(updateQuery);
       return true;
     } catch (e, st) {
       print('ObservationRepository.update error: $e\n$st');
@@ -92,14 +103,15 @@ class ObservationRepository {
     }
   }
 
-  bool delete(String id) {
+  Future<bool> delete(String id) async {
+    await getDatabaseHelper();
     if (id.isEmpty) return false;
     String deleteQuery = """
       DELETE FROM ${ObservationTable.tableName}
       WHERE ${ObservationTable.id} = '${_esc(id)}';
     """;
     try {
-      database.execute(deleteQuery);
+      database!.execute(deleteQuery);
       return true;
     } catch (e, st) {
       print('ObservationRepository.delete error: $e\n$st');

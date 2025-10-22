@@ -28,7 +28,7 @@ class Hikes extends _$Hikes {
 
   Future<List<Hikehistory>> _loadInitial() async {
     final repository = ref.read(hikehistoryRepositoryProvider);
-    final page = repository.getAllPaged(_pageSize, _offset);
+    final page = await repository.getAllPaged(_pageSize, _offset);
     _items.addAll(page);
     _offset += page.length;
     if (page.length < _pageSize) _hasMore = false;
@@ -41,7 +41,7 @@ class Hikes extends _$Hikes {
     state = const AsyncValue.loading();
     final repository = ref.read(hikehistoryRepositoryProvider);
     try {
-      final page = repository.getAllPaged(_pageSize, _offset);
+      final page = await repository.getAllPaged(_pageSize, _offset);
       if (page.isEmpty) {
         _hasMore = false;
       } else {
@@ -92,7 +92,7 @@ class Hikes extends _$Hikes {
     _hasMore = true;
     _items.clear();
     final repository = ref.read(hikehistoryRepositoryProvider);
-    final firstPage = repository.getAllPaged(_pageSize, _offset);
+    final firstPage = await repository.getAllPaged(_pageSize, _offset);
     _items.addAll(firstPage);
     _offset += firstPage.length;
     if (firstPage.length < _pageSize) _hasMore = false;
@@ -102,7 +102,7 @@ class Hikes extends _$Hikes {
   // New: toggle favourite and update local cache
   Future<void> toggleFavourite(String id, bool fav) async {
     final repository = ref.read(hikehistoryRepositoryProvider);
-    final ok = repository.toggleFavourite(id, fav);
+    final ok = await repository.toggleFavourite(id, fav);
     if (!ok) return;
     // update local cache if present
     final idx = _items.indexWhere((h) => h.id == id);
